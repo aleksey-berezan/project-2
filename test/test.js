@@ -5,12 +5,14 @@ const expect = require('chai').expect;
 const request = require('supertest');
 const sqlite3 = require('sqlite3');
 
-const app = require('../server.js');
+
 const seed = require('./seed.js');
 const migration = require('../migration');
 
 const prodDb = new sqlite3.Database('./database.sqlite');
 const testDb = new sqlite3.Database(process.env.TEST_DATABASE);
+
+const app = require('../server.js').withDb(testDb);
 
 describe('Employee Table', function () {
   before(function (done) {
