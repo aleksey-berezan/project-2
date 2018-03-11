@@ -19,18 +19,24 @@ const capitalize = (s) => {
 }
 
 // db
-const onReady = (res, opt) => {
+const onReady = (res, optOrCallback) => {
+    if (!optOrCallback) {
+        throw "'optOrCallback' must be non empty object!";
+    }
+
+    const isFunction = typeof optOrCallback === 'function';
+    const callback = isFunction ? optOrCallback : optOrCallback.callback;
+    const opt = isFunction ? {} : optOrCallback;
+
+    if (!callback) {
+        throw "'callback' must be specified!";
+    }
+
     // critical to have it as plain old 'function' - in sake of access to 'this.lastID'
     return function (err, dbResult) {
         if (handleFailure(err, res)) {
             return;
         }
-
-        if (!opt) {
-            throw 'At least callback must be specified!';
-        }
-
-        const callback = opt.callback;
 
         if (dbResult === undefined && opt && opt.onNotFound) {
             res.sendStatus(opt.onNotFound);

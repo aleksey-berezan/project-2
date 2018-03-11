@@ -8,6 +8,7 @@ module.exports = router;
 // GET
 router.get('/', (req, res, next) => {
     dbUtil.all(req.db, 'employee', { $is_current_employee: 1 }, onReady(res, {
+        onNotFound: 404,
         callback: (rows) => {
             res.status(200).send({ employees: rows });
         }
@@ -33,15 +34,13 @@ router.post('/', (req, res, next) => {
     }
 
     dbUtil.insert(req.db, 'employee', { $name: employee.name, $position: employee.position, $wage: employee.wage },
-        onReady(res, {
-            callback: (_, lastId) => {
-                dbUtil.get(req.db, 'employee', { $id: lastId }, onReady(res, {
-                    onNotFound: 404,
-                    callback: (row) => {
-                        res.status(201).send({ employee: row });
-                    }
-                }));
-            }
+        onReady(res, (_, lastId) => {
+            dbUtil.get(req.db, 'employee', { $id: lastId }, onReady(res, {
+                onNotFound: 404,
+                callback: (row) => {
+                    res.status(201).send({ employee: row });
+                }
+            }));
         }));
 });
 
@@ -57,15 +56,12 @@ router.put('/:id', (req, res, next) => {
     dbUtil.update(req.db, 'employee',
         { $id: req.employeeId },
         { $name: employee.name, $position: employee.position, $wage: employee.wage },
-        onReady(res, {
-            callback: () => {
-                dbUtil.get(req.db, 'employee', { $id: employeeId }, onReady(res, {
-                    onNotFound: 404,
-                    callback: (row) => {
-                        res.status(200).send({ employee: row });
-                    }
-                }));
-            }
+        onReady(res, () => {
+            dbUtil.get(req.db, 'employee', { $id: employeeId }, onReady(res, {
+                onNotFound: 404,
+                callback: (row) => {
+                    res.status(200).send({ employee: row });
+                }
+            }));
         }));
-
 });
