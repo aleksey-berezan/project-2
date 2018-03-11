@@ -20,11 +20,6 @@ router.get('/', (req, res, next) => {
 
 // POST
 router.post('/', (req, res, next) => {
-    // newTimesheet = {
-    //     hours: 10,
-    //     rate: 3.5,
-    //     date: 100
-    //   };
     const timesheet = req.body.timesheet;
     if (!timesheet || !timesheet.hours || !timesheet.rate || !timesheet.date) {
         res.sendStatus(400);
