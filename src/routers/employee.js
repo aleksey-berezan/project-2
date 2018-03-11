@@ -44,3 +44,28 @@ router.post('/', (req, res, next) => {
             }
         }));
 });
+
+// PUT
+router.put('/:id', (req, res, next) => {
+    const employee = req.body.employee;
+    if (!employee || !employee.name || !employee.position || !employee.wage) {
+        res.sendStatus(400);
+        return;
+    }
+
+    const employeeId = req.employeeId;
+    dbUtil.update(req.db, 'employee',
+        { $id: req.employeeId },
+        { $name: employee.name, $position: employee.position, $wage: employee.wage },
+        onReady(res, {
+            callback: () => {
+                dbUtil.get(req.db, 'employee', { $id: employeeId }, onReady(res, {
+                    onNotFound: 404,
+                    callback: (row) => {
+                        res.status(200).send({ employee: row });
+                    }
+                }));
+            }
+        }));
+
+});
