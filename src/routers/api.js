@@ -35,6 +35,9 @@ const idExtractor = (entityName) => {
 	};
 }
 
+// extractors for specifically named entities
+apiRouter.param(':employeeId', idExtractor('employee'));
+
 //
 // sub routers
 //
@@ -43,6 +46,12 @@ const idExtractor = (entityName) => {
 const employeeRouter = require('./employee');
 employeeRouter.param(':id', idExtractor('employee'));
 apiRouter.use('/employees', employeeRouter);
+
+// api/employee/:employeeId/timesheets
+const timesheetRouter = require('./timesheet');
+// TODO: move param extractor closer to usages
+timesheetRouter.param(':timesheetId', idExtractor('timesheet'));
+apiRouter.use('/employees/:employeeId/timesheets', timesheetRouter);
 
 //
 // exports
