@@ -70,22 +70,40 @@ const getFilterString = (criterias) => {
 };
 
 // select
-const runSelect = (db, entityName, criterias, selectAll, callback) => {
+const runSelect = (db, entityName, criterias, selectAll, selectCount, callback) => {
+    const noFilter = Object.keys(criterias).length === 0 && criterias.constructor === Object;
     const params = getParams(criterias);
-    const query = `SELECT * FROM ${capitalize(entityName)} WHERE ${getFilterString(criterias)}`;
+    const query = `SELECT ` +
+        (selectCount ? 'COUNT(*) as count' : `*`) +
+        ` FROM ${capitalize(entityName)}` +
+        (noFilter ? `` : ` WHERE ${getFilterString(criterias)}`);
+
     if (selectAll) {
-        return db.all(query, criterias, callback);
+        if (noFilter) {
+            return db.all(query, callback);
+        } else {
+            return db.all(query, criterias, callback);
+        }
     } else {
-        return db.get(query, criterias, callback);
+        if (noFilter) {
+            return db.get(query, callback);
+        }
+        else {
+            return db.get(query, criterias, callback);
+        }
     }
 }
 
 const all = (db, entityName, criterias, callback) => {
-    return runSelect(db, entityName, criterias, true, callback);
+    return runSelect(db, entityName, criterias, true, false, callback);
 }
 
 const get = (db, entityName, criterias, callback) => {
-    return runSelect(db, entityName, criterias, false, callback);
+    return runSelect(db, entityName, criterias, false, false, callback);
+}
+
+const count = (db, entityName, criterias, callback) => {
+    return runSelect(db, entityName, criterias, false, true, callback);
 }
 
 // insert
@@ -124,5 +142,6 @@ module.exports = {
     all: all,
     get: get,
     update: update,
-    del: del
+    del: del,
+    count: count
 };
