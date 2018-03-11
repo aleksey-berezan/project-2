@@ -43,7 +43,8 @@ const onReady = (res, optOrCallback) => {
             return;
         }
 
-        callback(dbResult, this.lastID);
+        // TODO: pass data as object
+        callback(dbResult, this.lastID, this.changes);
     };
 };
 
@@ -90,8 +91,9 @@ const get = (db, entityName, criterias, callback) => {
 // insert
 const insert = (db, entityName, values, callback) => {
     const params = getParams(values);
+    const query = `INSERT INTO ${capitalize(entityName)} (${params.columnNames.join(',')}) VALUES (${params.argNames.join(',')})`;
     return db.run(
-        `INSERT INTO ${capitalize(entityName)} (${params.columnNames.join(',')}) VALUES (${params.argNames.join(',')})`,
+        query,
         values,
         callback);
 }
@@ -102,11 +104,17 @@ const update = (db, entityName, criterias, values, callback) => {
     const query = `UPDATE ${capitalize(entityName)} ` +
         `SET ${params.columnToArgMap.map(x => `${x.columnName}=${x.argName}`).join(',')} ` +
         `WHERE ${getFilterString(criterias)}`
-
     return db.run(
         query,
         Object.assign(values, criterias),
         callback);
+}
+
+// delete
+const del = (db, entityName, criterias, callback) => {
+    const params = getParams(criterias);
+    const query = `DELETE FROM ${capitalize(entityName)} WHERE ${getFilterString(criterias)}`;
+    return db.run(query, criterias, callback);
 }
 
 // exports
@@ -115,5 +123,6 @@ module.exports = {
     insert: insert,
     all: all,
     get: get,
-    update: update
+    update: update,
+    del: del
 };
