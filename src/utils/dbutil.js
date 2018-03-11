@@ -41,7 +41,7 @@ const onReady = (res, opt) => {
     };
 };
 
-const extractParams = (values) => {
+const getParams = (values) => {
     const argNames = Object.keys(values);
     const columnNames = Object.keys(values).map(x => x.substr(1));
 
@@ -53,10 +53,19 @@ const extractParams = (values) => {
     return { argNames, columnNames, columnToArgMap };
 };
 
+const getFilterString = (criterias) => {
+    if (!criterias) {
+        return '';
+    }
+
+    const params = getParams(criterias);
+    return `${params.columnToArgMap.map(x => `${x.columnName}=${x.argName}`).join('AND')}`;
+};
+
+// select
 const runSelect = (db, entityName, criterias, selectAll, callback) => {
-    const params = extractParams(criterias);
-    const query = `SELECT * FROM ${capitalize(entityName)} WHERE ` +
-        `${params.columnToArgMap.map(x => `${x.columnName}=${x.argName}`).join('AND')}`;
+    const params = getParams(criterias);
+    const query = `SELECT * FROM ${capitalize(entityName)} WHERE ${getFilterString(criterias)}`;
     if (selectAll) {
         return db.all(query, criterias, callback);
     } else {
@@ -72,11 +81,25 @@ const get = (db, entityName, criterias, callback) => {
     return runSelect(db, entityName, criterias, false, callback);
 }
 
+// insert
 const insert = (db, entityName, values, callback) => {
-    const params = extractParams(values);
+    const params = getParams(values);
     return db.run(
         `INSERT INTO ${capitalize(entityName)} (${params.columnNames.join(',')}) VALUES (${params.argNames.join(',')})`,
         values,
+        callback);
+}
+
+// update
+const update = (db, entityName, criterias, values, callback) => {
+    const params = getParams(values);
+    const query = `UPDATE ${capitalize(entityName)} ` +
+        `SET ${params.columnToArgMap.map(x => `${x.columnName}=${x.argName}`).join(',')} ` +
+        `WHERE ${getFilterString(criterias)}`
+
+    return db.run(
+        query,
+        Object.assign(values, criterias),
         callback);
 }
 
@@ -85,5 +108,6 @@ module.exports = {
     onReady: onReady,
     insert: insert,
     all: all,
-    get: get
+    get: get,
+    update: update
 };
