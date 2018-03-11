@@ -53,6 +53,11 @@ const timesheetRouter = require('./timesheet');
 timesheetRouter.param(':timesheetId', idExtractor('timesheet'));
 apiRouter.use('/employees/:employeeId/timesheets', timesheetRouter);
 
+// api/employee/:employeeId/timesheets
+const menuRouter = require('./menu');
+menuRouter.param(':id', idExtractor('menu'));
+apiRouter.use('/menus', menuRouter);
+
 //
 // exports
 //
