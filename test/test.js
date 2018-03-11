@@ -703,6 +703,7 @@ describe('PUT /api/employees/:employeeId/timesheets/:timesheetId', function () {
 
   it('should return a 404 status code for invalid timesheet IDs', function () {
     updatedTimesheet = {
+      hours: 20,
       rate: 3.5,
       date: 100
     };
