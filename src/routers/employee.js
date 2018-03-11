@@ -52,16 +52,26 @@ router.put('/:id', (req, res, next) => {
         return;
     }
 
-    const employeeId = req.employeeId;
     dbUtil.update(req.db, 'employee',
         { $id: req.employeeId },
         { $name: employee.name, $position: employee.position, $wage: employee.wage },
         onReady(res, () => {
-            dbUtil.get(req.db, 'employee', { $id: employeeId }, onReady(res, {
+            dbUtil.get(req.db, 'employee', { $id: req.employeeId }, onReady(res, {
                 onNotFound: 404,
                 callback: (row) => {
                     res.status(200).send({ employee: row });
                 }
             }));
+        }));
+});
+
+// DELETE
+router.delete('/:id', (req, res, next) => {
+    dbUtil.update(req.db, 'employee', { $id: req.employeeId }, { $is_current_employee: 0 },
+        onReady(res, () => {
+            dbUtil.get(req.db, 'employee', { $id: req.employeeId },
+                onReady(res, (row) => {
+                    res.status(200).send({ employee: row });
+                }));
         }));
 });
