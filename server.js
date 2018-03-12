@@ -13,7 +13,7 @@ if (!module.parent) {
     // logging
     // use only when only running the app
     const morgan = require('morgan');
-    app.use(morgan('dev'));
+    app.use(morgan('common'));
 }
 
 // body parsing
@@ -47,6 +47,7 @@ app.use('/api', apiRouter);
 var server;
 const PORT = process.env.PORT || 4000;
 if (!module.parent) {
+    withDb();
     server = app.listen(PORT, () => {
         console.log(`Server listening on port ${PORT}`);
     });
