@@ -17,7 +17,6 @@ function dbUtil(db) {
                 console.log(err);
             }
 
-            // TODO: pass data as object
             callback({
                 row: dbResult,
                 rows: dbResult,

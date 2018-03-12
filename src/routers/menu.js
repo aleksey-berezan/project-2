@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const dbUtil = require('../common/dbUtil');
+const verifyEntityExists = require('../common/commonHandlers').verifyEntityExists;
 
 module.exports = router;
 
@@ -61,7 +62,7 @@ router.put('/:menuId', validateMenu, (req, res, next) => {
 });
 
 // DELETE
-router.delete('/:menuId', (req, res, next) => {// TODO: remove redundant count here
+router.delete('/:menuId', (req, res, next) => {
     req.dbUtil.count('menuItem', { $menu_id: req.menuId }, (data) => {
         if (data.row.count > 0) {
             res.sendStatus(400);
