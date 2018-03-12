@@ -45,7 +45,12 @@ router.post('/', validateTimesheet, verifyEntityExists('employee'), (req, res, n
 // PUT
 router.put('/:timesheetId', validateTimesheet, verifyEntityExists('employee'), (req, res, next) => {
     const timesheet = req.body.timesheet;
-    const values = { $hours: timesheet.hours, $rate: timesheet.rate, $date: timesheet.date, $employee_id: req.employeeId };
+    const values = {
+        $hours: timesheet.hours,
+        $rate: timesheet.rate,
+        $date: timesheet.date,
+        $employee_id: req.employeeId
+    };
     dbUtil.update(req.db, 'timesheet', { $id: req.timesheetId }, values, onReady(res,
         (data) => {
             if (!data.changes) {
@@ -61,9 +66,7 @@ router.put('/:timesheetId', validateTimesheet, verifyEntityExists('employee'), (
 
 // DELETE
 router.delete('/:timesheetId', (req, res, next) => {
-    dbUtil.del(req.db, 'timesheet', { $id: req.timesheetId }, onReady(res, {
-        callback: (data) => {
-            res.sendStatus(data.changes ? 204 : 404);
-        }
+    dbUtil.del(req.db, 'timesheet', { $id: req.timesheetId }, onReady(res, (data) => {
+        res.sendStatus(data.changes ? 204 : 404);
     }));
 });

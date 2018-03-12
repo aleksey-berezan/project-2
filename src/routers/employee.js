@@ -26,11 +26,13 @@ router.get('/', (req, res, next) => {
 
 router.get('/:employeeId', (req, res, next) => {
     dbUtil.get(req.db, 'employee', { $id: req.employeeId },
-        onReady(res, {
-            onNotFound: 404,
-            callback: (data) => {
-                res.status(200).send({ employee: data.row });
+        onReady(res, (data) => {
+            if (data.notFound) {
+                res.sendStatus(404);
+                return;
             }
+
+            res.status(200).send({ employee: data.row });
         }));
 });
 

@@ -19,15 +19,7 @@ const capitalize = (s) => {
 }
 
 // db
-const onReady = (res, optOrCallback) => {
-    if (!optOrCallback) {
-        throw "'optOrCallback' must be non empty object!";
-    }
-
-    const isFunction = typeof optOrCallback === 'function';
-    const callback = isFunction ? optOrCallback : optOrCallback.callback;
-    const opt = isFunction ? {} : optOrCallback;
-
+const onReady = (res, callback) => {
     if (!callback) {
         throw "'callback' must be specified!";
     }
@@ -38,15 +30,11 @@ const onReady = (res, optOrCallback) => {
             return;
         }
 
-        if (dbResult === undefined && opt && opt.onNotFound) {
-            res.sendStatus(opt.onNotFound);
-            return;
-        }
-
         // TODO: pass data as object
         callback({
             row: dbResult,
             rows: dbResult,
+            notFound: dbResult === undefined,
             lastId: this.lastID,
             changes: this.changes
         });

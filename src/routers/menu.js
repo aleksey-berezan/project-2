@@ -18,21 +18,23 @@ const validateMenu = (req, res, next) => {
 
 // GET
 router.get('/', (req, res, next) => {
-    dbUtil.all(req.db, 'menu', {}, onReady(res, {
-        onNotFound: 404,
-        callback: (data) => {
-            res.status(200).send({ menus: data.rows });
+    dbUtil.all(req.db, 'menu', {}, onReady(res, (data) => {
+        if (data.notFound) {
+            res.sendStatus(404);
+            return;
         }
+        res.status(200).send({ menus: data.rows });
     }));
 });
 
 router.get('/:menuId', (req, res, next) => {
     dbUtil.get(req.db, 'menu', { $id: req.menuId },
-        onReady(res, {
-            onNotFound: 404,
-            callback: (data) => {
-                res.status(200).send({ menu: data.row });
+        onReady(res, (data) => {
+            if (data.notFound) {
+                res.sendStatus(404);
+                return;
             }
+            res.status(200).send({ menu: data.row });
         }));
 });
 
