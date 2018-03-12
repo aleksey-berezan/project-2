@@ -18,7 +18,7 @@ const validateTimesheet = (req, res, next) => {
 
 // GET
 router.get('/', verifyEntityExists('employee'), (req, res, next) => {
-    dbUtil.all(req.db, 'timesheet', { $employee_id: req.employeeId }, (data) => {
+    req.dbUtil.all('timesheet', { $employee_id: req.employeeId }, (data) => {
         res.status(200).send({ timesheets: data.rows });
     })
 });
@@ -32,8 +32,8 @@ router.post('/', validateTimesheet, verifyEntityExists('employee'), (req, res, n
         $date: timesheet.date,
         $employee_id: req.employeeId
     };
-    dbUtil.insert(req.db, 'timesheet', values, (data) => {
-        dbUtil.get(req.db, 'timesheet', { $id: data.lastId }, (data) => {
+    req.dbUtil.insert('timesheet', values, (data) => {
+        req.dbUtil.get('timesheet', { $id: data.lastId }, (data) => {
             res.status(201).send({ timesheet: data.row });
         })
     });
@@ -48,12 +48,12 @@ router.put('/:timesheetId', validateTimesheet, verifyEntityExists('employee'), (
         $date: timesheet.date,
         $employee_id: req.employeeId
     };
-    dbUtil.update(req.db, 'timesheet', { $id: req.timesheetId }, values, (data) => {
+    req.dbUtil.update('timesheet', { $id: req.timesheetId }, values, (data) => {
         if (!data.changes) {
             res.sendStatus(404);
             return;
         }
-        dbUtil.get(req.db, 'timesheet', { $id: req.timesheetId }, (data) => {
+        req.dbUtil.get('timesheet', { $id: req.timesheetId }, (data) => {
             res.status(200).send({ timesheet: data.row });
         })
     });
@@ -61,7 +61,7 @@ router.put('/:timesheetId', validateTimesheet, verifyEntityExists('employee'), (
 
 // DELETE
 router.delete('/:timesheetId', (req, res, next) => {
-    dbUtil.del(req.db, 'timesheet', { $id: req.timesheetId }, (data) => {
+    req.dbUtil.del('timesheet', { $id: req.timesheetId }, (data) => {
         res.sendStatus(data.changes ? 204 : 404);
     });
 });

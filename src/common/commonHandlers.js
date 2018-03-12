@@ -7,7 +7,7 @@ const verifyEntityExists = (entityName, identityColumnName) => {
         const criterias = {};
         criterias['$' + (identityColumnName || 'id')] = req[entityName + 'Id'];
 
-        dbUtil.count(req.db, entityName, criterias, (data) => {
+        req.dbUtil.count(entityName, criterias, (data) => {
             if (data.row.count === 0) {
                 res.sendStatus(404);
                 return;

@@ -18,7 +18,7 @@ const validateMenuItem = (req, res, next) => {
 
 // GET
 router.get('/', verifyEntityExists('menu'), (req, res, next) => {
-    dbUtil.all(req.db, 'menuItem', { $menu_id: req.menuId }, (data) => {
+    req.dbUtil.all('menuItem', { $menu_id: req.menuId }, (data) => {
         res.status(200).send({ menuItems: data.rows });
     });
 });
@@ -33,8 +33,8 @@ router.post('/', validateMenuItem, (req, res, next) => {
         $price: menuItem.price,
         $menu_id: menuItem.menu_id
     };
-    dbUtil.insert(req.db, 'menuItem', values, (data) => {
-        dbUtil.get(req.db, 'menuItem', { $id: data.lastId }, (data) => {
+    req.dbUtil.insert('menuItem', values, (data) => {
+        req.dbUtil.get('menuItem', { $id: data.lastId }, (data) => {
             res.status(201).send({ menuItem: data.row });
         });
     });
@@ -49,12 +49,12 @@ router.put('/:menuItemId', validateMenuItem, verifyEntityExists('menu'), (req, r
         $inventory: menuItem.inventory,
         $price: menuItem.price,
     };
-    dbUtil.update(req.db, 'menuItem', { $id: req.menuItemId }, values, (data) => {
+    req.dbUtil.update('menuItem', { $id: req.menuItemId }, values, (data) => {
         if (!data.changes) {
             res.sendStatus(404);
             return;
         }
-        dbUtil.get(req.db, 'menuItem', { $id: req.menuItemId }, (data) => {
+        req.dbUtil.get('menuItem', { $id: req.menuItemId }, (data) => {
             res.status(200).send({ menuItem: data.row });
         })
     });
@@ -62,7 +62,7 @@ router.put('/:menuItemId', validateMenuItem, verifyEntityExists('menu'), (req, r
 
 // DELETE
 router.delete('/:menuItemId', (req, res, next) => {
-    dbUtil.del(req.db, 'menuItem', { $id: req.menuItemId }, (data) => {
+    req.dbUtil.del('menuItem', { $id: req.menuItemId }, (data) => {
         res.sendStatus(data.changes ? 204 : 404);
     });
 });

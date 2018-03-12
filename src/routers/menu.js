@@ -17,7 +17,7 @@ const validateMenu = (req, res, next) => {
 
 // GET
 router.get('/', (req, res, next) => {
-    dbUtil.all(req.db, 'menu', {}, (data) => {
+    req.dbUtil.all('menu', {}, (data) => {
         if (data.notFound) {
             res.sendStatus(404);
             return;
@@ -27,7 +27,7 @@ router.get('/', (req, res, next) => {
 });
 
 router.get('/:menuId', (req, res, next) => {
-    dbUtil.get(req.db, 'menu', { $id: req.menuId }, (data) => {
+    req.dbUtil.get('menu', { $id: req.menuId }, (data) => {
         if (data.notFound) {
             res.sendStatus(404);
             return;
@@ -39,8 +39,8 @@ router.get('/:menuId', (req, res, next) => {
 // POST
 router.post('/', validateMenu, (req, res, next) => {
     const menu = req.body.menu;
-    dbUtil.insert(req.db, 'menu', { $title: menu.title }, (data) => {
-        dbUtil.get(req.db, 'menu', { $id: data.lastId }, (data) => {
+    req.dbUtil.insert('menu', { $title: menu.title }, (data) => {
+        req.dbUtil.get('menu', { $id: data.lastId }, (data) => {
             res.status(201).send({ menu: data.row });
         });
     });
@@ -49,12 +49,12 @@ router.post('/', validateMenu, (req, res, next) => {
 // PUT
 router.put('/:menuId', validateMenu, (req, res, next) => {
     const menu = req.body.menu;
-    dbUtil.update(req.db, 'menu', { $id: req.menuId }, { $title: menu.title }, (data) => {
+    req.dbUtil.update('menu', { $id: req.menuId }, { $title: menu.title }, (data) => {
         if (!data.changes) {
             res.sendStatus(404);
             return;
         }
-        dbUtil.get(req.db, 'menu', { $id: req.menuId }, (data) => {
+        req.dbUtil.get('menu', { $id: req.menuId }, (data) => {
             res.status(200).send({ menu: data.row });
         });
     });
@@ -62,14 +62,14 @@ router.put('/:menuId', validateMenu, (req, res, next) => {
 
 // DELETE
 router.delete('/:menuId', (req, res, next) => {// TODO: remove redundant count here
-    dbUtil.count(req.db, 'menuItem', { $menu_id: req.menuId }, (data) => {
+    req.dbUtil.count('menuItem', { $menu_id: req.menuId }, (data) => {
         if (data.row.count > 0) {
             res.sendStatus(400);
             return;
         }
 
-        dbUtil.del(req.db, 'menu', { $id: req.menuId }, () => {
-            dbUtil.get(req.db, 'menu', { $id: req.menuId }, () => {
+        req.dbUtil.del('menu', { $id: req.menuId }, () => {
+            req.dbUtil.get('menu', { $id: req.menuId }, () => {
                 res.sendStatus(204);
             });
         });

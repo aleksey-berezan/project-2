@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const dbUtil = require('../common/dbUtil');
 
 module.exports = router;
 
@@ -17,13 +16,13 @@ const validateEmployee = (req, res, next) => {
 
 // GET
 router.get('/', (req, res, next) => {
-    dbUtil.all(req.db, 'employee', { $is_current_employee: 1 }, (data) => {
+    req.dbUtil.all('employee', { $is_current_employee: 1 }, (data) => {
         res.status(200).send({ employees: data.rows });
     });
 });
 
 router.get('/:employeeId', (req, res, next) => {
-    dbUtil.get(req.db, 'employee', { $id: req.employeeId }, (data) => {
+    req.dbUtil.get('employee', { $id: req.employeeId }, (data) => {
         if (data.notFound) {
             res.sendStatus(404);
             return;
@@ -37,8 +36,8 @@ router.get('/:employeeId', (req, res, next) => {
 router.post('/', validateEmployee, (req, res, next) => {
     const employee = req.body.employee;
     const values = { $name: employee.name, $position: employee.position, $wage: employee.wage };
-    dbUtil.insert(req.db, 'employee', values, (data) => {
-        dbUtil.get(req.db, 'employee', { $id: data.lastId }, (data) => {
+    req.dbUtil.insert('employee', values, (data) => {
+        req.dbUtil.get('employee', { $id: data.lastId }, (data) => {
             res.status(201).send({ employee: data.row });
         });
     });
@@ -48,12 +47,12 @@ router.post('/', validateEmployee, (req, res, next) => {
 router.put('/:employeeId', validateEmployee, (req, res, next) => {
     const employee = req.body.employee;
     const values = { $name: employee.name, $position: employee.position, $wage: employee.wage };
-    dbUtil.update(req.db, 'employee', { $id: req.employeeId }, values, (data) => {
+    req.dbUtil.update('employee', { $id: req.employeeId }, values, (data) => {
         if (!data.changes) {
             res.sendStatus(404);
             return;
         }
-        dbUtil.get(req.db, 'employee', { $id: req.employeeId }, (data) => {
+        req.dbUtil.get('employee', { $id: req.employeeId }, (data) => {
             res.status(200).send({ employee: data.row });
         });
     });
@@ -61,8 +60,8 @@ router.put('/:employeeId', validateEmployee, (req, res, next) => {
 
 // DELETE
 router.delete('/:employeeId', (req, res, next) => {
-    dbUtil.update(req.db, 'employee', { $id: req.employeeId }, { $is_current_employee: 0 }, () => {
-        dbUtil.get(req.db, 'employee', { $id: req.employeeId }, (data) => {
+    req.dbUtil.update('employee', { $id: req.employeeId }, { $is_current_employee: 0 }, () => {
+        req.dbUtil.get('employee', { $id: req.employeeId }, (data) => {
             res.status(200).send({ employee: data.row });
         });
     });

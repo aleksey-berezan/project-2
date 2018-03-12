@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const dbUtil = require('../common/dbUtil');
 
 //
 // root router
@@ -23,7 +24,8 @@ apiRouter.use('/', (req, res, next) => {
 		throw "No db is specified! use '.withDb()' function in order to specify it."
 	}
 
-	req.db = module.getDb();
+	const db = module.getDb();
+	req.dbUtil = new dbUtil.dbUtil(db);
 	next();
 });
 
