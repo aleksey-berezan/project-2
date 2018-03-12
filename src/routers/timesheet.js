@@ -1,9 +1,20 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const dbUtil = require('../utils/dbutil');
+const dbUtil = require('../utils/dbUtil');
 const onReady = dbUtil.onReady;
 
 module.exports = router;
+
+// common
+const validateTimesheet = (req, res, next) => {
+    const timesheet = req.body.timesheet;
+    if (!timesheet || !timesheet.hours || !timesheet.rate || !timesheet.date) {
+        res.sendStatus(400);
+        return;
+    }
+
+    next();
+};
 
 // GET
 router.get('/', (req, res, next) => {
@@ -19,13 +30,8 @@ router.get('/', (req, res, next) => {
 });
 
 // POST
-router.post('/', (req, res, next) => {
+router.post('/', validateTimesheet, (req, res, next) => {
     const timesheet = req.body.timesheet;
-    if (!timesheet || !timesheet.hours || !timesheet.rate || !timesheet.date) {
-        res.sendStatus(400);
-        return;
-    }
-
     dbUtil.get(req.db, 'employee', { $id: req.employeeId }, onReady(res, {
         onNotFound: 404,
         callback: () => {
@@ -41,14 +47,8 @@ router.post('/', (req, res, next) => {
 });
 
 // PUT
-router.put('/:timesheetId', (req, res, next) => {
-    // TODO: move validations into separate handlers
+router.put('/:timesheetId', validateTimesheet, (req, res, next) => {
     const timesheet = req.body.timesheet;
-    if (!timesheet || !timesheet.hours || !timesheet.rate || !timesheet.date) {
-        res.sendStatus(400);
-        return;
-    }
-
     dbUtil.get(req.db, 'employee', { $id: req.employeeId }, onReady(res, {
         onNotFound: 404,
         callback: () => {

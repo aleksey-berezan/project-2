@@ -1,9 +1,20 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const dbUtil = require('../utils/dbutil');
+const dbUtil = require('../utils/dbUtil');
 const onReady = dbUtil.onReady;
 
 module.exports = router;
+
+// common
+const validateMenu = (req, res, next) => {
+    const menu = req.body.menu;
+    if (!menu || !menu.title) {
+        res.sendStatus(400);
+        return;
+    }
+
+    next();
+};
 
 // GET
 router.get('/', (req, res, next) => {
@@ -15,7 +26,7 @@ router.get('/', (req, res, next) => {
     }));
 });
 
-router.get('/:id', (req, res, next) => {
+router.get('/:menuId', (req, res, next) => {
     dbUtil.get(req.db, 'menu', { $id: req.menuId },
         onReady(res, {
             onNotFound: 404,
@@ -26,13 +37,8 @@ router.get('/:id', (req, res, next) => {
 });
 
 // POST
-router.post('/', (req, res, next) => {
+router.post('/', validateMenu, (req, res, next) => {
     const menu = req.body.menu;
-    if (!menu || !menu.title) {
-        res.sendStatus(400);
-        return;
-    }
-
     dbUtil.insert(req.db, 'menu', { $title: menu.title },
         onReady(res, (_, lastId) => {
             dbUtil.get(req.db, 'menu', { $id: lastId }, onReady(res, {
@@ -45,16 +51,9 @@ router.post('/', (req, res, next) => {
 });
 
 // PUT
-router.put('/:id', (req, res, next) => {
+router.put('/:menuId', validateMenu, (req, res, next) => {
     const menu = req.body.menu;
-    if (!menu || !menu.title) {
-        res.sendStatus(400);
-        return;
-    }
-
-    dbUtil.update(req.db, 'menu',
-        { $id: req.menuId },
-        { $title: menu.title },
+    dbUtil.update(req.db, 'menu', { $id: req.menuId }, { $title: menu.title },
         onReady(res, () => {
             dbUtil.get(req.db, 'menu', { $id: req.menuId }, onReady(res, {
                 onNotFound: 404,
@@ -66,7 +65,7 @@ router.put('/:id', (req, res, next) => {
 });
 
 // DELETE
-router.delete('/:id', (req, res, next) => {
+router.delete('/:menuId', (req, res, next) => {
     dbUtil.count(req.db, 'menuItem', { $menu_id: req.menuId }, onReady(res, (row) => {
         if (row.count > 0) {
             res.sendStatus(400);

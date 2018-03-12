@@ -35,34 +35,34 @@ const idExtractor = (entityName) => {
 	};
 }
 
-// entity-specific param extractors
-apiRouter.param(':employeeId', idExtractor('employee'));
-apiRouter.param(':menuId', idExtractor('menu'));
-
 //
 // sub routers
 //
 
 // api/employee
 const employeeRouter = require('./employee');
-employeeRouter.param(':id', idExtractor('employee'));
+employeeRouter.param(':employeeId', idExtractor('employee'));
 
 apiRouter.use('/employees', employeeRouter);
 
 // api/employee/:employeeId/timesheets
 const timesheetRouter = require('./timesheet');
-// TODO: move param extractor closer to usages
 timesheetRouter.param(':timesheetId', idExtractor('timesheet'));
+apiRouter.param(':employeeId', idExtractor('employee'));
+
 apiRouter.use('/employees/:employeeId/timesheets', timesheetRouter);
 
 // api/menus
 const menuRouter = require('./menu');
-menuRouter.param(':id', idExtractor('menu'));
+menuRouter.param(':menuId', idExtractor('menu'));
+
 apiRouter.use('/menus', menuRouter);
 
 // api/menus/:menuId/menu-items
 const menuItemRouter = require('./menuitem');
 menuItemRouter.param(':menuItemId', idExtractor('menuItem'));
+apiRouter.param(':menuId', idExtractor('menu'));
+
 apiRouter.use('/menus/:menuId/menu-items', menuItemRouter);
 
 //

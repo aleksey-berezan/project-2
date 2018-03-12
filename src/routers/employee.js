@@ -1,9 +1,20 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const dbUtil = require('../utils/dbutil');
+const dbUtil = require('../utils/dbUtil');
 const onReady = dbUtil.onReady;
 
 module.exports = router;
+
+// common
+const validateEmployee = (req, res, next) => {
+    const employee = req.body.employee;
+    if (!employee || !employee.name || !employee.position || !employee.wage) {
+        res.sendStatus(400);
+        return;
+    }
+
+    next();
+};
 
 // GET
 router.get('/', (req, res, next) => {
@@ -15,7 +26,7 @@ router.get('/', (req, res, next) => {
     }));
 });
 
-router.get('/:id', (req, res, next) => {
+router.get('/:employeeId', (req, res, next) => {
     dbUtil.get(req.db, 'employee', { $id: req.employeeId },
         onReady(res, {
             onNotFound: 404,
@@ -26,13 +37,8 @@ router.get('/:id', (req, res, next) => {
 });
 
 // POST
-router.post('/', (req, res, next) => {
+router.post('/', validateEmployee, (req, res, next) => {
     const employee = req.body.employee;
-    if (!employee || !employee.name || !employee.position || !employee.wage) {
-        res.sendStatus(400);
-        return;
-    }
-
     dbUtil.insert(req.db, 'employee', { $name: employee.name, $position: employee.position, $wage: employee.wage },
         onReady(res, (_, lastId) => {
             dbUtil.get(req.db, 'employee', { $id: lastId }, onReady(res, {
@@ -45,16 +51,9 @@ router.post('/', (req, res, next) => {
 });
 
 // PUT
-router.put('/:id', (req, res, next) => {
+router.put('/:employeeId', validateEmployee, (req, res, next) => {
     const employee = req.body.employee;
-    if (!employee || !employee.name || !employee.position || !employee.wage) {
-        res.sendStatus(400);
-        return;
-    }
-
-    dbUtil.update(req.db, 'employee',
-        { $id: req.employeeId },
-        { $name: employee.name, $position: employee.position, $wage: employee.wage },
+    dbUtil.update(req.db, 'employee', { $id: req.employeeId }, { $name: employee.name, $position: employee.position, $wage: employee.wage },
         onReady(res, () => {
             dbUtil.get(req.db, 'employee', { $id: req.employeeId }, onReady(res, {
                 onNotFound: 404,
@@ -66,7 +65,7 @@ router.put('/:id', (req, res, next) => {
 });
 
 // DELETE
-router.delete('/:id', (req, res, next) => {
+router.delete('/:employeeId', (req, res, next) => {
     dbUtil.update(req.db, 'employee', { $id: req.employeeId }, { $is_current_employee: 0 },
         onReady(res, () => {
             dbUtil.get(req.db, 'employee', { $id: req.employeeId },

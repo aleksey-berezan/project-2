@@ -1,11 +1,22 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const dbUtil = require('../utils/dbutil');
+const dbUtil = require('../utils/dbUtil');
 const onReady = dbUtil.onReady;
 
 module.exports = router;
 
-// get
+// common
+const validateMenuItem = (req, res, next) => {
+    const menuItem = req.body.menuItem;
+    if (!menuItem.name || !menuItem.description || !menuItem.inventory || !menuItem.price) {
+        res.sendStatus(400);
+        return;
+    }
+
+    next();
+};
+
+// GET
 router.get('/', (req, res, next) => {
     dbUtil.count(req.db, 'menu', { $id: req.menuId }, onReady(res, (row) => {
         if (row.count === 0) {
@@ -20,13 +31,8 @@ router.get('/', (req, res, next) => {
 });
 
 // POST
-router.post('/', (req, res, next) => {
+router.post('/', validateMenuItem, (req, res, next) => {
     const menuItem = req.body.menuItem;
-    if (!menuItem.name || !menuItem.description || !menuItem.inventory || !menuItem.price || !menuItem.menu_id) {
-        res.sendStatus(400);
-        return;
-    }
-
     const values = { $name: menuItem.name, $description: menuItem.description, $inventory: menuItem.inventory, $price: menuItem.price, $menu_id: menuItem.menu_id };
     dbUtil.insert(req.db, 'menuItem', values, onReady(res, (_, lastId) => {
         dbUtil.get(req.db, 'menuItem', { $id: lastId }, onReady(res, (row) => {
@@ -36,14 +42,9 @@ router.post('/', (req, res, next) => {
 });
 
 // PUT
-router.put('/:menuItemId', (req, res, next) => {
+router.put('/:menuItemId', validateMenuItem, (req, res, next) => {
     // TODO: move validations into separate handlers
     const menuItem = req.body.menuItem;
-    if (!menuItem.name || !menuItem.description || !menuItem.inventory || !menuItem.price) {
-        res.sendStatus(400);
-        return;
-    }
-
     dbUtil.count(req.db, 'menu', { $id: req.menuId }, onReady(res, (row) => {
         if (row.count === 0) {
             res.sendStatus(404);

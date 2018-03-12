@@ -330,7 +330,7 @@ describe('GET /api/employees', function () {
   });
 });
 
-describe('GET /api/employees/:id', function () {
+describe('GET /api/employees/:employeeId', function () {
   before(function (done) {
     seed.seedEmployeeDatabase(done);
   });
@@ -433,7 +433,7 @@ describe('POST /api/employees', function () {
 });
 
 
-describe('PUT /api/employees/:id', function () {
+describe('PUT /api/employees/:employeeId', function () {
   let updatedEmployee;
 
   beforeEach(function (done) {
@@ -499,7 +499,7 @@ describe('PUT /api/employees/:id', function () {
   });
 });
 
-describe('DELETE /api/employees/:id', function () {
+describe('DELETE /api/employees/:employeeId', function () {
   beforeEach(function (done) {
     seed.seedEmployeeDatabase(done);
   });
@@ -796,7 +796,7 @@ describe('GET /api/menus', function () {
   });
 });
 
-describe('GET /api/menus/:id', function () {
+describe('GET /api/menus/:menuId', function () {
   before(function (done) {
     seed.seedMenuDatabase(done);
   });
@@ -876,7 +876,7 @@ describe('POST /api/menus', function () {
   });
 });
 
-describe('PUT /api/menus/:id', function () {
+describe('PUT /api/menus/:menuId', function () {
   let updatedMenu;
 
   beforeEach(function (done) {
@@ -931,7 +931,7 @@ describe('PUT /api/menus/:id', function () {
   });
 });
 
-describe('DELETE /api/menus/:id', function () {
+describe('DELETE /api/menus/:menuId', function () {
   beforeEach(function (done) {
     seed.seedMenuDatabase(() => seed.seedMenuItemDatabase(done));
   });
