@@ -20,8 +20,8 @@ const validateMenu = (req, res, next) => {
 router.get('/', (req, res, next) => {
     dbUtil.all(req.db, 'menu', {}, onReady(res, {
         onNotFound: 404,
-        callback: (rows) => {
-            res.status(200).send({ menus: rows });
+        callback: (data) => {
+            res.status(200).send({ menus: data.rows });
         }
     }));
 });
@@ -30,8 +30,8 @@ router.get('/:menuId', (req, res, next) => {
     dbUtil.get(req.db, 'menu', { $id: req.menuId },
         onReady(res, {
             onNotFound: 404,
-            callback: (row) => {
-                res.status(200).send({ menu: row });
+            callback: (data) => {
+                res.status(200).send({ menu: data.row });
             }
         }));
 });
@@ -40,13 +40,12 @@ router.get('/:menuId', (req, res, next) => {
 router.post('/', validateMenu, (req, res, next) => {
     const menu = req.body.menu;
     dbUtil.insert(req.db, 'menu', { $title: menu.title },
-        onReady(res, (_, lastId) => {
-            dbUtil.get(req.db, 'menu', { $id: lastId }, onReady(res, {
-                onNotFound: 404,
-                callback: (row) => {
-                    res.status(201).send({ menu: row });
+        onReady(res, (data) => {
+            dbUtil.get(req.db, 'menu', { $id: data.lastId }, onReady(res,
+                (data) => {
+                    res.status(201).send({ menu: data.row });
                 }
-            }));
+            ));
         }));
 });
 
@@ -54,20 +53,23 @@ router.post('/', validateMenu, (req, res, next) => {
 router.put('/:menuId', validateMenu, (req, res, next) => {
     const menu = req.body.menu;
     dbUtil.update(req.db, 'menu', { $id: req.menuId }, { $title: menu.title },
-        onReady(res, () => {
-            dbUtil.get(req.db, 'menu', { $id: req.menuId }, onReady(res, {
-                onNotFound: 404,
-                callback: (row) => {
-                    res.status(200).send({ menu: row });
+        onReady(res, (data) => {
+            if (!data.changes) {
+                res.sendStatus(404);
+                return;
+            }
+            dbUtil.get(req.db, 'menu', { $id: req.menuId }, onReady(res,
+                (data) => {
+                    res.status(200).send({ menu: data.row });
                 }
-            }));
+            ));
         }));
 });
 
 // DELETE
-router.delete('/:menuId', (req, res, next) => {
-    dbUtil.count(req.db, 'menuItem', { $menu_id: req.menuId }, onReady(res, (row) => {
-        if (row.count > 0) {
+router.delete('/:menuId', (req, res, next) => {// TODO: remove redundant count here
+    dbUtil.count(req.db, 'menuItem', { $menu_id: req.menuId }, onReady(res, (data) => {
+        if (data.row.count > 0) {
             res.sendStatus(400);
             return;
         }
@@ -75,7 +77,7 @@ router.delete('/:menuId', (req, res, next) => {
         dbUtil.del(req.db, 'menu', { $id: req.menuId },
             onReady(res, () => {
                 dbUtil.get(req.db, 'menu', { $id: req.menuId },
-                    onReady(res, (row) => {
+                    onReady(res, () => {
                         res.sendStatus(204);
                     }));
             }));

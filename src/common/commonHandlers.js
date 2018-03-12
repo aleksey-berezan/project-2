@@ -8,8 +8,8 @@ const verifyEntityExists = (entityName, identityColumnName) => {
         const criterias = {};
         criterias['$' + (identityColumnName || 'id')] = req[entityName + 'Id'];
 
-        dbUtil.count(req.db, entityName, criterias, onReady(res, (row) => {
-            if (row.count === 0) {
+        dbUtil.count(req.db, entityName, criterias, onReady(res, (data) => {
+            if (data.row.count === 0) {
                 res.sendStatus(404);
                 return;
             }

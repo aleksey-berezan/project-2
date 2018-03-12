@@ -19,8 +19,8 @@ const validateEmployee = (req, res, next) => {
 // GET
 router.get('/', (req, res, next) => {
     dbUtil.all(req.db, 'employee', { $is_current_employee: 1 }, onReady(res,
-        (rows) => {
-            res.status(200).send({ employees: rows });
+        (data) => {
+            res.status(200).send({ employees: data.rows });
         }));
 });
 
@@ -28,8 +28,8 @@ router.get('/:employeeId', (req, res, next) => {
     dbUtil.get(req.db, 'employee', { $id: req.employeeId },
         onReady(res, {
             onNotFound: 404,
-            callback: (row) => {
-                res.status(200).send({ employee: row });
+            callback: (data) => {
+                res.status(200).send({ employee: data.row });
             }
         }));
 });
@@ -39,10 +39,10 @@ router.post('/', validateEmployee, (req, res, next) => {
     const employee = req.body.employee;
     const values = { $name: employee.name, $position: employee.position, $wage: employee.wage };
     dbUtil.insert(req.db, 'employee', values,
-        onReady(res, (_, lastId) => {
-            dbUtil.get(req.db, 'employee', { $id: lastId }, onReady(res,
-                (row) => {
-                    res.status(201).send({ employee: row });
+        onReady(res, (data) => {
+            dbUtil.get(req.db, 'employee', { $id: data.lastId }, onReady(res,
+                (data) => {
+                    res.status(201).send({ employee: data.row });
                 }
             ));
         }));
@@ -53,14 +53,14 @@ router.put('/:employeeId', validateEmployee, (req, res, next) => {
     const employee = req.body.employee;
     const values = { $name: employee.name, $position: employee.position, $wage: employee.wage };
     dbUtil.update(req.db, 'employee', { $id: req.employeeId }, values,
-        onReady(res, (ignored1, ignored, changes) => {
-            if (!changes) {
+        onReady(res, (data) => {
+            if (!data.changes) {
                 res.sendStatus(404);
                 return;
             }
             dbUtil.get(req.db, 'employee', { $id: req.employeeId }, onReady(res,
-                (row) => {
-                    res.status(200).send({ employee: row });
+                (data) => {
+                    res.status(200).send({ employee: data.row });
                 }
             ));
         }));
@@ -71,8 +71,8 @@ router.delete('/:employeeId', (req, res, next) => {
     dbUtil.update(req.db, 'employee', { $id: req.employeeId }, { $is_current_employee: 0 },
         onReady(res, () => {
             dbUtil.get(req.db, 'employee', { $id: req.employeeId },
-                onReady(res, (row) => {
-                    res.status(200).send({ employee: row });
+                onReady(res, (data) => {
+                    res.status(200).send({ employee: data.row });
                 }));
         }));
 });

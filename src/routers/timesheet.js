@@ -20,19 +20,24 @@ const validateTimesheet = (req, res, next) => {
 // GET
 router.get('/', verifyEntityExists('employee'), (req, res, next) => {
     dbUtil.all(req.db, 'timesheet', { $employee_id: req.employeeId },
-        onReady(res, (rows) => {
-            res.status(200).send({ timesheets: rows });
+        onReady(res, (data) => {
+            res.status(200).send({ timesheets: data.rows });
         }))
 });
 
 // POST
 router.post('/', validateTimesheet, verifyEntityExists('employee'), (req, res, next) => {
     const timesheet = req.body.timesheet;
-    const values = { $hours: timesheet.hours, $rate: timesheet.rate, $date: timesheet.date, $employee_id: req.employeeId };
-    dbUtil.insert(req.db, 'timesheet', values, onReady(res, (_, lastId) => {
-        dbUtil.get(req.db, 'timesheet', { $id: lastId },
-            onReady(res, (row) => {
-                res.status(201).send({ timesheet: row });
+    const values = {
+        $hours: timesheet.hours,
+        $rate: timesheet.rate,
+        $date: timesheet.date,
+        $employee_id: req.employeeId
+    };
+    dbUtil.insert(req.db, 'timesheet', values, onReady(res, (data) => {
+        dbUtil.get(req.db, 'timesheet', { $id: data.lastId },
+            onReady(res, (data) => {
+                res.status(201).send({ timesheet: data.row });
             }))
     }));
 });
@@ -42,14 +47,14 @@ router.put('/:timesheetId', validateTimesheet, verifyEntityExists('employee'), (
     const timesheet = req.body.timesheet;
     const values = { $hours: timesheet.hours, $rate: timesheet.rate, $date: timesheet.date, $employee_id: req.employeeId };
     dbUtil.update(req.db, 'timesheet', { $id: req.timesheetId }, values, onReady(res,
-        (ignored1, ignored2, changes) => {
-            if (!changes) {
+        (data) => {
+            if (!data.changes) {
                 res.sendStatus(404);
                 return;
             }
             dbUtil.get(req.db, 'timesheet', { $id: req.timesheetId },
-                onReady(res, (row) => {
-                    res.status(200).send({ timesheet: row });
+                onReady(res, (data) => {
+                    res.status(200).send({ timesheet: data.row });
                 }))
         }));
 });
@@ -57,8 +62,8 @@ router.put('/:timesheetId', validateTimesheet, verifyEntityExists('employee'), (
 // DELETE
 router.delete('/:timesheetId', (req, res, next) => {
     dbUtil.del(req.db, 'timesheet', { $id: req.timesheetId }, onReady(res, {
-        callback: (ignored1, ignored2, changes) => {
-            res.sendStatus(changes ? 204 : 404);
+        callback: (data) => {
+            res.sendStatus(data.changes ? 204 : 404);
         }
     }));
 });

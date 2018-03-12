@@ -44,7 +44,12 @@ const onReady = (res, optOrCallback) => {
         }
 
         // TODO: pass data as object
-        callback(dbResult, this.lastID, this.changes);
+        callback({
+            row: dbResult,
+            rows: dbResult,
+            lastId: this.lastID,
+            changes: this.changes
+        });
     };
 };
 
