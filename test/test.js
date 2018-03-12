@@ -1023,7 +1023,8 @@ describe('POST /api/menus/:menuId/menu-items', function () {
       name: 'New Menu Item',
       description: 'New Description',
       inventory: 20,
-      price: 1.5
+      price: 1.5,
+      menu_id: 2
     };
 
     seed.seedMenuItemDatabase(done);
@@ -1142,6 +1143,7 @@ describe('PUT /api/menus/:menuId/menu-items/:menuItemId', function () {
 
   it('should return a 404 status code for invalid menu item IDs', function () {
     updatedMenuItem = {
+      name: 'updated name',
       description: 'Updated Description',
       inventory: 20,
       price: 1.5
