@@ -1,33 +1,17 @@
-// common
-const handleFailure = (err, res, status, message) => {
-    if (!err) {
-        return false;
-    }
-
-    console.log(err);
-    if (!res) {
-        throw err;
-    }
-
-    res.status(status || 500);
-    res.send(message || err);
-    return true;
-};
-
+// helper functions
 const capitalize = (s) => {
     return s.charAt(0).toUpperCase() + s.substr(1);
 }
 
-// db
-const onReady = (res, callback) => {
+const wrapCallback = (callback) => {
     if (!callback) {
         throw "'callback' must be specified!";
     }
 
     // critical to have it as plain old 'function' - in sake of access to 'this.lastID'
     return function (err, dbResult) {
-        if (handleFailure(err, res)) {
-            return;
+        if (err) {
+            console.log(err);
         }
 
         // TODO: pass data as object
@@ -36,7 +20,8 @@ const onReady = (res, callback) => {
             rows: dbResult,
             notFound: dbResult === undefined,
             lastId: this.lastID,
-            changes: this.changes
+            changes: this.changes,
+            err: err
         });
     };
 };
@@ -62,7 +47,6 @@ const getFilterString = (criterias) => {
     return `${params.columnToArgMap.map(x => `${x.columnName}=${x.argName}`).join('AND')}`;
 };
 
-// select
 const runSelect = (db, entityName, criterias, selectAll, selectCount, callback) => {
     const noFilter = Object.keys(criterias).length === 0 && criterias.constructor === Object;
     const params = getParams(criterias);
@@ -87,29 +71,29 @@ const runSelect = (db, entityName, criterias, selectAll, selectCount, callback) 
     }
 }
 
+// exported functions
+
 const all = (db, entityName, criterias, callback) => {
-    return runSelect(db, entityName, criterias, true, false, callback);
+    return runSelect(db, entityName, criterias, true, false, wrapCallback(callback));
 }
 
 const get = (db, entityName, criterias, callback) => {
-    return runSelect(db, entityName, criterias, false, false, callback);
+    return runSelect(db, entityName, criterias, false, false, wrapCallback(callback));
 }
 
 const count = (db, entityName, criterias, callback) => {
-    return runSelect(db, entityName, criterias, false, true, callback);
+    return runSelect(db, entityName, criterias, false, true, wrapCallback(callback));
 }
 
-// insert
 const insert = (db, entityName, values, callback) => {
     const params = getParams(values);
     const query = `INSERT INTO ${capitalize(entityName)} (${params.columnNames.join(',')}) VALUES (${params.argNames.join(',')})`;
     return db.run(
         query,
         values,
-        callback);
+        wrapCallback(callback));
 }
 
-// update
 const update = (db, entityName, criterias, values, callback) => {
     const params = getParams(values);
     const query = `UPDATE ${capitalize(entityName)} ` +
@@ -118,23 +102,21 @@ const update = (db, entityName, criterias, values, callback) => {
     return db.run(
         query,
         Object.assign(values, criterias),
-        callback);
+        wrapCallback(callback));
 }
 
-// delete
 const del = (db, entityName, criterias, callback) => {
     const params = getParams(criterias);
     const query = `DELETE FROM ${capitalize(entityName)} WHERE ${getFilterString(criterias)}`;
-    return db.run(query, criterias, callback);
+    return db.run(query, criterias, wrapCallback(callback));
 }
 
 // exports
 module.exports = {
-    onReady: onReady,
     insert: insert,
     all: all,
     get: get,
+    count: count,
     update: update,
-    del: del,
-    count: count
+    del: del
 };
