@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const dbUtil = require('../utils/dbUtil');
+const dbUtil = require('../common/dbUtil');
 const onReady = dbUtil.onReady;
 
 module.exports = router;

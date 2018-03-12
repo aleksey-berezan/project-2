@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const dbUtil = require('../utils/dbUtil');
+const dbUtil = require('../common/dbUtil');
 const onReady = dbUtil.onReady;
+const verifyEntityExists = require('../common/commonHandlers').verifyEntityExists;
 
 module.exports = router;
 
@@ -17,55 +18,40 @@ const validateTimesheet = (req, res, next) => {
 };
 
 // GET
-router.get('/', (req, res, next) => {
-    dbUtil.get(req.db, 'employee', { $id: req.employeeId }, onReady(res, {
-        onNotFound: 404,
-        callback: () => {
-            dbUtil.all(req.db, 'timesheet', { $employee_id: req.employeeId },
-                onReady(res, (rows) => {
-                    res.status(200).send({ timesheets: rows });
-                }))
-        }
-    }));
+router.get('/', verifyEntityExists('employee'), (req, res, next) => {
+    dbUtil.all(req.db, 'timesheet', { $employee_id: req.employeeId },
+        onReady(res, (rows) => {
+            res.status(200).send({ timesheets: rows });
+        }))
 });
 
 // POST
-router.post('/', validateTimesheet, (req, res, next) => {
+router.post('/', validateTimesheet, verifyEntityExists('employee'), (req, res, next) => {
     const timesheet = req.body.timesheet;
-    dbUtil.get(req.db, 'employee', { $id: req.employeeId }, onReady(res, {
-        onNotFound: 404,
-        callback: () => {
-            const values = { $hours: timesheet.hours, $rate: timesheet.rate, $date: timesheet.date, $employee_id: req.employeeId };
-            dbUtil.insert(req.db, 'timesheet', values, onReady(res, (_, lastId) => {
-                dbUtil.get(req.db, 'timesheet', { $id: lastId },
-                    onReady(res, (row) => {
-                        res.status(201).send({ timesheet: row });
-                    }))
-            }));
-        }
+    const values = { $hours: timesheet.hours, $rate: timesheet.rate, $date: timesheet.date, $employee_id: req.employeeId };
+    dbUtil.insert(req.db, 'timesheet', values, onReady(res, (_, lastId) => {
+        dbUtil.get(req.db, 'timesheet', { $id: lastId },
+            onReady(res, (row) => {
+                res.status(201).send({ timesheet: row });
+            }))
     }));
 });
 
 // PUT
-router.put('/:timesheetId', validateTimesheet, (req, res, next) => {
+router.put('/:timesheetId', validateTimesheet, verifyEntityExists('employee'), (req, res, next) => {
     const timesheet = req.body.timesheet;
-    dbUtil.get(req.db, 'employee', { $id: req.employeeId }, onReady(res, {
-        onNotFound: 404,
-        callback: () => {
-            const values = { $hours: timesheet.hours, $rate: timesheet.rate, $date: timesheet.date, $employee_id: req.employeeId };
-            dbUtil.update(req.db, 'timesheet', { $id: req.timesheetId }, values, onReady(res,
-                (ignored1, ignored2, changes) => {
-                    if (!changes) {
-                        res.sendStatus(404);
-                        return;
-                    }
-                    dbUtil.get(req.db, 'timesheet', { $id: req.timesheetId },
-                        onReady(res, (row) => {
-                            res.status(200).send({ timesheet: row });
-                        }))
-                }));
-        }
-    }));
+    const values = { $hours: timesheet.hours, $rate: timesheet.rate, $date: timesheet.date, $employee_id: req.employeeId };
+    dbUtil.update(req.db, 'timesheet', { $id: req.timesheetId }, values, onReady(res,
+        (ignored1, ignored2, changes) => {
+            if (!changes) {
+                res.sendStatus(404);
+                return;
+            }
+            dbUtil.get(req.db, 'timesheet', { $id: req.timesheetId },
+                onReady(res, (row) => {
+                    res.status(200).send({ timesheet: row });
+                }))
+        }));
 });
 
 // DELETE

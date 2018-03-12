@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const dbUtil = require('../utils/dbUtil');
+const dbUtil = require('../common/dbUtil');
 const onReady = dbUtil.onReady;
+const verifyEntityExists = require('../common/commonHandlers').verifyEntityExists;
 
 module.exports = router;
 
@@ -17,16 +18,9 @@ const validateMenuItem = (req, res, next) => {
 };
 
 // GET
-router.get('/', (req, res, next) => {
-    dbUtil.count(req.db, 'menu', { $id: req.menuId }, onReady(res, (row) => {
-        if (row.count === 0) {
-            res.sendStatus(404);
-            return;
-        }
-
-        dbUtil.all(req.db, 'menuItem', { $menu_id: req.menuId }, onReady(res, (rows) => {
-            res.status(200).send({ menuItems: rows });
-        }));
+router.get('/', verifyEntityExists('menu'), (req, res, next) => {
+    dbUtil.all(req.db, 'menuItem', { $menu_id: req.menuId }, onReady(res, (rows) => {
+        res.status(200).send({ menuItems: rows });
     }));
 });
 
@@ -42,28 +36,20 @@ router.post('/', validateMenuItem, (req, res, next) => {
 });
 
 // PUT
-router.put('/:menuItemId', validateMenuItem, (req, res, next) => {
-    // TODO: move validations into separate handlers
+router.put('/:menuItemId', validateMenuItem, verifyEntityExists('menu'), (req, res, next) => {
     const menuItem = req.body.menuItem;
-    dbUtil.count(req.db, 'menu', { $id: req.menuId }, onReady(res, (row) => {
-        if (row.count === 0) {
-            res.sendStatus(404);
-            return;
-        }
-
-        const values = { $name: menuItem.name, $description: menuItem.description, $inventory: menuItem.inventory, $price: menuItem.price, };
-        dbUtil.update(req.db, 'menuItem', { $id: req.menuItemId }, values, onReady(res,
-            (ignored1, ignored2, changes) => {
-                if (!changes) {
-                    res.sendStatus(404);
-                    return;
-                }
-                dbUtil.get(req.db, 'menuItem', { $id: req.menuItemId },
-                    onReady(res, (row) => {
-                        res.status(200).send({ menuItem: row });
-                    }))
-            }));
-    }));
+    const values = { $name: menuItem.name, $description: menuItem.description, $inventory: menuItem.inventory, $price: menuItem.price, };
+    dbUtil.update(req.db, 'menuItem', { $id: req.menuItemId }, values, onReady(res,
+        (ignored1, ignored2, changes) => {// TODO: move params into single object
+            if (!changes) {
+                res.sendStatus(404);
+                return;
+            }
+            dbUtil.get(req.db, 'menuItem', { $id: req.menuItemId },
+                onReady(res, (row) => {
+                    res.status(200).send({ menuItem: row });
+                }))
+        }));
 });
 
 // DELETE
