@@ -31,7 +31,7 @@ router.post('/', validateMenuItem, (req, res, next) => {
         $description: menuItem.description,
         $inventory: menuItem.inventory,
         $price: menuItem.price,
-        $menu_id: menuItem.menu_id
+        $menu_id: req.menuId
     };
     req.dbUtil.insert('menuItem', values, (data) => {
         req.dbUtil.get('menuItem', { $id: data.lastId }, (data) => {
